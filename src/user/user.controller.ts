@@ -3,9 +3,10 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
+  Patch,
   Post,
-  Put,
   UseGuards,
 } from '@nestjs/common';
 import { Prisma, User as UserModel } from 'generated/prisma/client';
@@ -16,20 +17,23 @@ export class UserController {
   //Service de usuário
   constructor(private readonly userService: UserService) {}
   //Rota para criar um usuário
-  @UseGuards(AuthGuard)
   @Post()
   async signupUser(
     @Body() userData: Prisma.UserCreateInput,
   ): Promise<UserModel> {
     return this.userService.createUser(userData);
   }
+
   @UseGuards(AuthGuard)
   @Get(':id')
   async getUser(@Param('id') id: string) {
-    return this.userService.user({ id: Number(id) });
+    const user = await this.userService.user({ id: Number(id) });
+    if (!user) throw new NotFoundException('User do not found.');
+    return;
   }
+
   @UseGuards(AuthGuard)
-  @Put(':id')
+  @Patch(':id')
   async updateUser(
     @Param('id') id: string,
     @Body() data: Prisma.UserUpdateInput,
@@ -39,6 +43,7 @@ export class UserController {
       data,
     });
   }
+
   @UseGuards(AuthGuard)
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
